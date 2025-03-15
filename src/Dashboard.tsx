@@ -68,7 +68,7 @@ function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: Da
     };
   }, []);
 
-  const handleCapture = () => {
+  const handleCaptureAndScan = () => {
     if (!videoRef.current || !stream) {
       console.error('Camera capture failed:', {
         videoRef: videoRef.current ? 'exists' : 'missing',
@@ -103,6 +103,9 @@ function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: Da
             blobUrl: blobUrl,
             timestamp: new Date().toISOString()
           });
+          
+          // Immediately proceed to scan the captured image
+          handleScan(blobUrl);
         } else {
           throw new Error('Failed to create image blob');
         }
@@ -120,6 +123,9 @@ function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: Da
       setError('Failed to capture image. Please try again.');
     }
   };
+  
+  // Original handleCapture function kept for reference
+  const handleCapture = handleCaptureAndScan;
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -138,25 +144,31 @@ function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: Da
     }
   }, [location]);
 
-  const handleScan = async () => {
+  const handleScan = async (imgUrl?: string) => {
+    const currentImageUrl = imgUrl || imagePreview;
+    
     console.debug('Scan initiated', {
-      hasImagePreview: !!imagePreview,
+      hasImagePreview: !!currentImageUrl,
       hasApiKey: !!API_KEY,
       timestamp: new Date().toISOString()
     });
 
-    if (!imagePreview) {
+    if (!currentImageUrl) {
       console.warn('Scan attempted without image');
-      setError('Please capture an image first');
+      setError('No image available to scan');
+      setIsLoading(false);
       return;
     }
     if (!API_KEY) {
       console.error('API key missing');
       setError('API key is not configured');
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    if (!isLoading) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -164,7 +176,7 @@ function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: Da
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
       console.debug('Fetching image blob from preview');
-      const response = await fetch(imagePreview);
+      const response = await fetch(currentImageUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
       }
@@ -174,7 +186,6 @@ function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: Da
         type: blob.type,
         timestamp: new Date().toISOString()
       });
-      
       const xmlPrompt = `
 <SYSTEM_PROMPT>
 You are an environmental analysis AI that generates structured sustainability assessments.
@@ -210,20 +221,32 @@ Always return valid JSON using the exact template provided. Analyze both images 
 </ProductAnalysisRequest>
 `;
 
+      // Convert ArrayBuffer to base64 safely using a more robust approach
       const imageBytes = await blob.arrayBuffer();
-      const base64Data = btoa(String.fromCharCode(...new Uint8Array(imageBytes)));
+      // Use a safer method to convert binary data to base64
+      const base64Data = await blobToBase64(blob);
       const imagePart = {
         inlineData: {
-          data: base64Data,
-          mimeType: 'image/jpeg'
+          data: base64Data.split(',')[1], // Remove the data URL prefix
+          mimeType: blob.type
         }
       };
+      
+      // Helper function to safely convert blob to base64
+      function blobToBase64(blob: Blob): Promise<string> {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      }
 
       console.debug('Initiating Gemini API request with payload:', {
-        model: 'gemini-pro-vision',
+        model: 'gemini-1.5-flash', // Use the correct model name that matches the actual model being used
         prompt: xmlPrompt.replace(/\s+/g, ' ').substring(0, 200) + '...',
         imageMetadata: {
-          mimeType: 'image/jpeg',
+          mimeType: blob.type, // Use the actual blob type instead of hardcoding
           dataLength: base64Data.length
         }
       });
@@ -257,7 +280,7 @@ Always return valid JSON using the exact template provided. Analyze both images 
       
         navigate('/scan', { 
           state: { 
-            imageData: imagePreview,
+            imageData: currentImageUrl, // Use currentImageUrl instead of imagePreview
             sustainabilityData: sustainabilityData,
             error: null
           } 
@@ -286,11 +309,15 @@ Always return valid JSON using the exact template provided. Analyze both images 
           errorMessage = 'Invalid API configuration. Please check credentials.';
         } else if (error.message.includes('deprecated')) {
           errorMessage = 'API version error: The model version is not supported.';
+        } else if (error.message.includes('Provided image is not valid')) {
+          errorMessage = 'The image format is not supported. Please try capturing a clearer image.';
+        } else if (error.message.includes('Bad Request')) {
+          errorMessage = 'The API rejected the request. Please try with a different image.';
         }
       }
       navigate('/scan', { 
         state: { 
-          imageData: imagePreview,
+          imageData: currentImageUrl, // Use currentImageUrl instead of imagePreview
           error: errorMessage
         } 
       });
@@ -317,13 +344,6 @@ Always return valid JSON using the exact template provided. Analyze both images 
                 className="preview-image"
                 style={{ transform: 'scaleX(-1)' }}
               />
-              <button 
-                className="capture-button"
-                onClick={handleCapture}
-                disabled={!stream}
-              >
-                Capture Image
-              </button>
             </>
           ) : (
             <div className="camera-placeholder">
@@ -337,13 +357,30 @@ Always return valid JSON using the exact template provided. Analyze both images 
           SIMPLY SCAN ANY PRODUCT, AND LET SOS MAGNIFY THE DETAILS
         </p>
         {error && <p className="error-message">{error}</p>}
-        <button 
-          className="scan-button" 
-          onClick={handleScan} 
-          disabled={isLoading}
-        >
-          {isLoading ? 'Analyzing...' : 'Scan Product'}
-        </button>
+        {stream ? (
+          <button 
+            className="scan-button" 
+            onClick={handleCaptureAndScan} 
+            disabled={!stream || isLoading}
+          >
+            {isLoading ? 'Analyzing...' : 'Capture & Analyze'}
+          </button>
+        ) : imagePreview ? (
+          <button 
+            className="scan-button" 
+            onClick={() => handleScan()} 
+            disabled={isLoading}
+          >
+            {isLoading ? 'Analyzing...' : 'Analyze Product'}
+          </button>
+        ) : (
+          <button 
+            className="scan-button" 
+            disabled={true}
+          >
+            Camera Initializing...
+          </button>
+        )}
       </div>
     </div>
   );
