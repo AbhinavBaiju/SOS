@@ -241,21 +241,35 @@ Always return valid JSON using the exact template provided. Analyze both images 
       });
 
       // Clean the response text by removing markdown code block syntax if present
-      const cleanedResponse = response_text.replace(/^```json\n|```$/g, '').trim();
-      const sustainabilityData = JSON.parse(cleanedResponse) as SustainabilityData;
-      console.debug('Parsed sustainability data:', {
-        plantLifeImpact: sustainabilityData.sustainability_data.affect_on.plant_life,
-        marineLifeImpact: sustainabilityData.sustainability_data.affect_on.marine_life,
-        alternativeProduct: sustainabilityData.sustainability_data.alternative.product_title
-      });
-
-      navigate('/scan', { 
-        state: { 
-          imageData: imagePreview,
-          sustainabilityData: sustainabilityData,
-          error: null
-        } 
-      });
+      const cleanedResponse = response_text
+        .replace(/^```(?:json)?\n|```$/gm, '') // Remove markdown code blocks with or without language specifier
+        .trim()
+        .replace(/\\n/g, '\n') // Handle escaped newlines
+        .replace(/\\([^\\])/g, '$1'); // Remove unnecessary escaping
+      
+      try {
+        const sustainabilityData = JSON.parse(cleanedResponse) as SustainabilityData;
+        console.debug('Parsed sustainability data:', {
+          plantLifeImpact: sustainabilityData.sustainability_data.affect_on.plant_life,
+          marineLifeImpact: sustainabilityData.sustainability_data.affect_on.marine_life,
+          alternativeProduct: sustainabilityData.sustainability_data.alternative.product_title
+        });
+      
+        navigate('/scan', { 
+          state: { 
+            imageData: imagePreview,
+            sustainabilityData: sustainabilityData,
+            error: null
+          } 
+        });
+      } catch (parseError) {
+        console.error('JSON parsing error:', {
+          error: parseError instanceof Error ? parseError.message : 'Unknown error',
+          rawResponse: response_text.substring(0, 200),
+          cleanedResponse: cleanedResponse.substring(0, 200)
+        });
+        throw new Error(`Failed to parse API response: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+      }
     } catch (error) {
       console.error('Error analyzing image:', {
         error: error instanceof Error ? error.message : 'Unknown error',
