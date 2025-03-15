@@ -90,10 +90,8 @@ function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: Da
 
       context.drawImage(videoRef.current, 0, 0);
       
-      // Convert canvas to blob and create a session-cached URL
       canvas.toBlob((blob) => {
         if (blob) {
-          // Create a blob URL that persists for the browser session
           const blobUrl = URL.createObjectURL(blob);
           setImagePreview(blobUrl);
           setError(null);
@@ -104,7 +102,6 @@ function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: Da
             timestamp: new Date().toISOString()
           });
           
-          // Immediately proceed to scan the captured image
           handleScan(blobUrl);
         } else {
           throw new Error('Failed to create image blob');
@@ -123,9 +120,6 @@ function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: Da
       setError('Failed to capture image. Please try again.');
     }
   };
-  
-  // Original handleCapture function kept for reference
-  const handleCapture = handleCaptureAndScan;
 
   const getGreeting = () => {
     const hour = new Date().getHours();

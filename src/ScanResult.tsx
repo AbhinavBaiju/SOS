@@ -45,14 +45,6 @@ export default function ScanResult({ imageUrl, sustainabilityData }: ScanResultP
     (plantLifePercentage + marineLifePercentage + landLifePercentage) / 3
   );
 
-  const getImpactLabel = (percentage: number): string => {
-    if (percentage < 20) return 'Minimal Impact';
-    if (percentage < 40) return 'Low Impact';
-    if (percentage < 60) return 'Moderate Impact';
-    if (percentage < 80) return 'High Impact';
-    return 'Severe Impact';
-  };
-
   const handleScanAgain = () => {
     navigate('/dashboard');
   };
