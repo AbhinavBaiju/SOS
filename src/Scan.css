@@ -1,4 +1,7 @@
 .scan-container {
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
   width: 100%;
   height: 100vh;
   background: #512B52;
@@ -24,6 +27,8 @@
 }
 
 .scan-image {
+  max-width: 100%;
+  height: auto;
   max-width: 80%;
   height: auto;
   margin: 20px 0;

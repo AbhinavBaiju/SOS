@@ -40,9 +40,18 @@ export default function ScanResult({ imageUrl, sustainabilityData }: ScanResultP
   );
 
   // Calculate overall SOS score (average of all impacts)
+  // Higher scores indicate more environmental harm
   const sosScore = Math.round(
     (plantLifePercentage + marineLifePercentage + landLifePercentage) / 3
   );
+
+  const getImpactLabel = (percentage: number): string => {
+    if (percentage < 20) return 'Minimal Impact';
+    if (percentage < 40) return 'Low Impact';
+    if (percentage < 60) return 'Moderate Impact';
+    if (percentage < 80) return 'High Impact';
+    return 'Severe Impact';
+  };
 
   const handleScanAgain = () => {
     navigate('/dashboard');
@@ -64,21 +73,21 @@ export default function ScanResult({ imageUrl, sustainabilityData }: ScanResultP
               <div className="impact-score-circle">
                 <div className="impact-score-value">{marineLifePercentage}%</div>
               </div>
-              <div className="impact-label">marinelife</div>
+              <div className="impact-label">Marine Life</div>
             </div>
             <div className="impact-metric">
               <img src="/scan/PLANTLIFE_ICON.png" alt="Plant life" className="impact-icon" />
               <div className="impact-score-circle">
                 <div className="impact-score-value">{plantLifePercentage}%</div>
               </div>
-              <div className="impact-label">plantlife</div>
+              <div className="impact-label">Plant Life</div>
             </div>
             <div className="impact-metric">
               <img src="/scan/LANDLIFE_ICON.png" alt="Land life" className="impact-icon" />
               <div className="impact-score-circle">
                 <div className="impact-score-value">{landLifePercentage}%</div>
               </div>
-              <div className="impact-label">landlife</div>
+              <div className="impact-label">Land Life</div>
             </div>
           </div>
           <div className="information">
@@ -101,7 +110,13 @@ export default function ScanResult({ imageUrl, sustainabilityData }: ScanResultP
         </div>
 
         <div className="scan-result__footer">
-            <h3 className='final-verdict'>FINAL VIRDICT GOES HERE</h3>
+            <h3 className='final-verdict'>
+              {sosScore < 20 ? 'Environmentally Sustainable Product' :
+               sosScore < 40 ? 'Low Environmental Impact' :
+               sosScore < 60 ? 'Moderate Environmental Impact' :
+               sosScore < 80 ? 'High Environmental Impact' :
+               'Severe Environmental Impact - Consider Sustainable Alternatives'}
+            </h3>
           <button className="sos-again-button" onClick={handleScanAgain}>
             sos again
           </button>

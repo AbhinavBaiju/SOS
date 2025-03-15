@@ -36,6 +36,38 @@ export default function Scan() {
   }, [state]);
 
   useEffect(() => {
+    if (state?.imageData && !state?.sustainabilityData) {
+      const productAnalysisRequest = {
+        ImageAnalysis: state.imageData,
+        TextAnalysis: {
+          ProductCategory: 'Food Item', // Default to food item, can be updated based on image recognition
+          MaterialsDetected: '[Analyzing visible packaging materials...]'
+        },
+        OutputTemplate: {
+          sustainability_data: {
+            affect_on: {
+              plant_life: { value: 0, max_value: 100 },
+              marine_life: { value: 0, max_value: 100 },
+              land_life: { value: 0, max_value: 100 }
+            },
+            bad_effect: '',
+            alternative: {
+              product_title: '',
+              reason: ''
+            }
+          }
+        }
+      };
+
+      console.debug('Sending environmental analysis request:', {
+        imageData: state.imageData.substring(0, 100) + '...',
+        analysisTemplate: productAnalysisRequest,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [state?.imageData, state?.sustainabilityData]);
+
+  useEffect(() => {
     if (state?.sustainabilityData) {
       console.debug('Received sustainability data:', {
         plantLifeImpact: state.sustainabilityData.sustainability_data.affect_on.plant_life,
