@@ -25,7 +25,7 @@ interface DashboardProps {
   userName?: string;
 }
 
-function Dashboard({ userName = 'User' }: DashboardProps) {
+function Dashboard({ userName = localStorage.getItem('userName') || 'User' }: DashboardProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
