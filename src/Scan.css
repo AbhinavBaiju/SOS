@@ -22,3 +22,101 @@
   font-size: 1.2rem;
   text-align: center;
 }
+
+.scan-image {
+  max-width: 80%;
+  height: auto;
+  margin: 20px 0;
+  border-radius: 10px;
+}
+
+.analysis-results {
+  width: 100%;
+  max-width: 600px;
+  background: rgba(238, 209, 237, 0.1);
+  border-radius: 15px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.analysis-results h2 {
+  color: #EED1ED;
+  font-family: 'BeniBold', sans-serif;
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.impact-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.impact-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.metric h3 {
+  color: #EED1ED;
+  font-family: 'Helvetica', sans-serif;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 15px;
+  background: rgba(238, 209, 237, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background: #EED1ED;
+  border-radius: 10px;
+}
+
+.impact-details {
+  color: #EED1ED;
+  font-family: 'Helvetica', sans-serif;
+}
+
+.impact-details h3 {
+  font-size: 1.3rem;
+  margin: 15px 0 10px;
+}
+
+.impact-details p {
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.alternative {
+  background: rgba(238, 209, 237, 0.15);
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.alternative h4 {
+  color: #EED1ED;
+  font-family: 'BeniBold', sans-serif;
+  font-size: 1.1rem;
+  margin: 0 0 10px;
+}
+
+.error {
+  color: #ff6b6b;
+}

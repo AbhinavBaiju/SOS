@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Scan.css';
+import ScanResult from './ScanResult';
 
 interface ScanState {
   imageData: string;
@@ -69,61 +70,17 @@ export default function Scan() {
 
   return (
     <div className="scan-container">
-      <h1 className="scan-title">SCAN ANALYSIS</h1>
-      <img src={state.imageData} alt="Scanned product" className="scan-image" />
-      
       {sustainabilityData ? (
-        <div className="analysis-results">
-          <h2>Environmental Impact</h2>
-          <div className="impact-metrics">
-            <div className="metric">
-              <h3>Plant Life Impact</h3>
-              <div className="progress-bar">
-                <div 
-                  className="progress" 
-                  style={{
-                    width: `${(sustainabilityData.affect_on.plant_life.value / sustainabilityData.affect_on.plant_life.max_value) * 100}%`
-                  }}
-                />
-              </div>
-            </div>
-            <div className="metric">
-              <h3>Marine Life Impact</h3>
-              <div className="progress-bar">
-                <div 
-                  className="progress" 
-                  style={{
-                    width: `${(sustainabilityData.affect_on.marine_life.value / sustainabilityData.affect_on.marine_life.max_value) * 100}%`
-                  }}
-                />
-              </div>
-            </div>
-            <div className="metric">
-              <h3>Land Life Impact</h3>
-              <div className="progress-bar">
-                <div 
-                  className="progress" 
-                  style={{
-                    width: `${(sustainabilityData.affect_on.land_life.value / sustainabilityData.affect_on.land_life.max_value) * 100}%`
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div className="impact-details">
-            <h3>Environmental Effects</h3>
-            <p>{sustainabilityData.bad_effect}</p>
-            
-            <h3>Sustainable Alternative</h3>
-            <div className="alternative">
-              <h4>{sustainabilityData.alternative.product_title}</h4>
-              <p>{sustainabilityData.alternative.reason}</p>
-            </div>
-          </div>
-        </div>
+        <ScanResult 
+          imageUrl={state.imageData} 
+          sustainabilityData={sustainabilityData} 
+        />
       ) : (
-        <p className="scan-message">Processing your product scan...</p>
+        <>
+          <h1 className="scan-title">SCAN ANALYSIS</h1>
+          <img src={state.imageData} alt="Scanned product" className="scan-image" />
+          <p className="scan-message">Processing your product scan...</p>
+        </>
       )}
     </div>
   );
