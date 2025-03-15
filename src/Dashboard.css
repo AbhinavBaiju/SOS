@@ -11,6 +11,7 @@
   overflow-y: auto;
   box-sizing: border-box;
   overflow: hidden !important;
+  padding-top: 100px
 }
 
 .greeting-container {

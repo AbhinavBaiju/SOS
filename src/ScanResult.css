@@ -13,10 +13,10 @@
   flex: 1;
   overflow-y: auto;
   position: relative;
-  z-index: 1;
   padding-bottom: 20px;
   width: 100%;
   box-sizing: border-box;
+  margin-top: 0px;
 }
 
 .scan-result__header {
@@ -29,6 +29,7 @@
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  padding-top: 30px !important;
 }
 
 .scan-result__image-container {
