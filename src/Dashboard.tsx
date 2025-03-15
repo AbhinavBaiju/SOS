@@ -215,8 +215,6 @@ Always return valid JSON using the exact template provided. Analyze both images 
 </ProductAnalysisRequest>
 `;
 
-      // Convert ArrayBuffer to base64 safely using a more robust approach
-      const imageBytes = await blob.arrayBuffer();
       // Use a safer method to convert binary data to base64
       const base64Data = await blobToBase64(blob);
       const imagePart = {
