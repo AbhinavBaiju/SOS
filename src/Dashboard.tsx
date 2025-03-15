@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import './Dashboard.css';
 
@@ -28,6 +28,11 @@ interface DashboardProps {
 function Dashboard({ userName = 'User' }: DashboardProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setError(null);
+  }, []);
+
   const [isLoading, setIsLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -44,6 +49,11 @@ function Dashboard({ userName = 'User' }: DashboardProps) {
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
         }
+        console.debug('Camera initialized successfully', {
+          videoTracks: mediaStream.getVideoTracks().map(t => ({id: t.id, kind: t.kind})),
+          resolution: videoRef.current ? 
+            `${videoRef.current.videoWidth}x${videoRef.current.videoHeight}` : 'unknown'
+        });
       } catch (error) {
         console.error('Error accessing camera:', error);
         setError('Failed to access camera. Please ensure camera permissions are granted.');
@@ -59,15 +69,55 @@ function Dashboard({ userName = 'User' }: DashboardProps) {
   }, []);
 
   const handleCapture = () => {
-    if (videoRef.current && stream) {
+    if (!videoRef.current || !stream) {
+      console.error('Camera capture failed:', {
+        videoRef: videoRef.current ? 'exists' : 'missing',
+        stream: stream ? 'active' : 'inactive'
+      });
+      setError('Camera not ready. Please try again.');
+      return;
+    }
+
+    try {
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-      canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-      const imageData = canvas.toDataURL('image/jpeg');
-      setImagePreview(imageData);
+      const context = canvas.getContext('2d');
+      
+      if (!context) {
+        throw new Error('Failed to get canvas context');
+      }
+
+      context.drawImage(videoRef.current, 0, 0);
+      
+      // Convert canvas to blob and create a session-cached URL
+      canvas.toBlob((blob) => {
+        if (blob) {
+          // Create a blob URL that persists for the browser session
+          const blobUrl = URL.createObjectURL(blob);
+          setImagePreview(blobUrl);
+          setError(null);
+          console.debug('Image captured and cached successfully', {
+            dimensions: `${canvas.width}x${canvas.height}`,
+            blobSize: blob.size,
+            blobUrl: blobUrl,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          throw new Error('Failed to create image blob');
+        }
+      }, 'image/jpeg', 0.95);
+      
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
+    } catch (error) {
+      console.error('Image capture error:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        videoWidth: videoRef.current?.videoWidth,
+        videoHeight: videoRef.current?.videoHeight
+      });
+      setError('Failed to capture image. Please try again.');
     }
   };
 
@@ -79,13 +129,29 @@ function Dashboard({ userName = 'User' }: DashboardProps) {
   };
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.error) {
+      navigate('.', { state: null, replace: true });
+      setError(null);
+    }
+  }, [location]);
 
   const handleScan = async () => {
+    console.debug('Scan initiated', {
+      hasImagePreview: !!imagePreview,
+      hasApiKey: !!API_KEY,
+      timestamp: new Date().toISOString()
+    });
+
     if (!imagePreview) {
+      console.warn('Scan attempted without image');
       setError('Please capture an image first');
       return;
     }
     if (!API_KEY) {
+      console.error('API key missing');
       setError('API key is not configured');
       return;
     }
@@ -94,11 +160,20 @@ function Dashboard({ userName = 'User' }: DashboardProps) {
     setError(null);
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
+      console.debug('Initializing Gemini model');
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
-      // Convert base64 to blob
+      console.debug('Fetching image blob from preview');
       const response = await fetch(imagePreview);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      }
       const blob = await response.blob();
+      console.debug('Image blob fetched successfully', {
+        size: blob.size,
+        type: blob.type,
+        timestamp: new Date().toISOString()
+      });
       
       const xmlPrompt = `
 <SYSTEM_PROMPT>
@@ -116,6 +191,22 @@ Always return valid JSON using the exact template provided. Analyze both images 
   <ProductCategory>Clothing</ProductCategory>
   <MaterialsDetected>Polyester, Plastic packaging</MaterialsDetected>
 </TextAnalysis>
+<OutputTemplate>
+{
+  "sustainability_data": {
+    "affect_on": {
+      "plant_life": {"value": 0,"max_value": 100},
+      "marine_life": {"value": 0,"max_value": 100},
+      "land_life": {"value": 0,"max_value": 100}
+    },
+    "bad_effect": "[VISUAL-BASED ANALYSIS]...",
+    "alternative": {
+      "product_title": "...",
+      "reason": "..."
+    }
+  }
+}
+</OutputTemplate>
 </ProductAnalysisRequest>
 `;
 
@@ -128,20 +219,61 @@ Always return valid JSON using the exact template provided. Analyze both images 
         }
       };
 
+      console.debug('Initiating Gemini API request with payload:', {
+        model: 'gemini-pro-vision',
+        prompt: xmlPrompt.replace(/\s+/g, ' ').substring(0, 200) + '...',
+        imageMetadata: {
+          mimeType: 'image/jpeg',
+          dataLength: base64Data.length
+        }
+      });
+
+      const startTime = Date.now();
       const result = await model.generateContent([xmlPrompt, imagePart]);
+      const duration = Date.now() - startTime;
+
       const response_text = await result.response.text();
-      const sustainabilityData = JSON.parse(response_text) as SustainabilityData;
+      console.log('Complete Raw Gemini API Response:', {
+        fullResponse: response_text,
+        responseLength: response_text.length,
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString()
+      });
+
+      // Clean the response text by removing markdown code block syntax if present
+      const cleanedResponse = response_text.replace(/^```json\n|```$/g, '').trim();
+      const sustainabilityData = JSON.parse(cleanedResponse) as SustainabilityData;
+      console.debug('Parsed sustainability data:', {
+        plantLifeImpact: sustainabilityData.sustainability_data.affect_on.plant_life,
+        marineLifeImpact: sustainabilityData.sustainability_data.affect_on.marine_life,
+        alternativeProduct: sustainabilityData.sustainability_data.alternative.product_title
+      });
 
       navigate('/scan', { 
         state: { 
           imageData: imagePreview,
-          sustainabilityData: sustainabilityData
+          sustainabilityData: sustainabilityData,
+          error: null
         } 
       });
     } catch (error) {
-      console.error('Error analyzing image:', error);
-      const errorMessage = 'Failed to analyze image. Please try again.';
-      setError(errorMessage);
+      console.error('Error analyzing image:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        imagePreview: imagePreview ? imagePreview.substring(0, 50) + '...' : null
+      });
+      let errorMessage = 'Failed to analyze image. Please try again.';
+      if (error instanceof Error) {
+        if (error.message.includes('Network Error')) {
+          errorMessage = 'Network error: Please check your internet connection.';
+        } else if (error.message.includes('invalid JSON')) {
+          errorMessage = 'Invalid API response format. Please try again.';
+        } else if (error.message.includes('API key')) {
+          errorMessage = 'Invalid API configuration. Please check credentials.';
+        } else if (error.message.includes('deprecated')) {
+          errorMessage = 'API version error: The model version is not supported.';
+        }
+      }
       navigate('/scan', { 
         state: { 
           imageData: imagePreview,
@@ -170,9 +302,14 @@ Always return valid JSON using the exact template provided. Analyze both images 
                 playsInline
                 className="preview-image"
                 style={{ transform: 'scaleX(-1)' }}
-                onClick={handleCapture}
               />
-
+              <button 
+                className="capture-button"
+                onClick={handleCapture}
+                disabled={!stream}
+              >
+                Capture Image
+              </button>
             </>
           ) : (
             <div className="camera-placeholder">

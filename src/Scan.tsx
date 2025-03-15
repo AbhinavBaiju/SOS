@@ -26,6 +26,26 @@ export default function Scan() {
   const location = useLocation();
   const state = location.state as ScanState;
 
+  useEffect(() => {
+    return () => {
+      if (state?.error) {
+        state.error = undefined;
+      }
+    };
+  }, [state]);
+
+  useEffect(() => {
+    if (state?.sustainabilityData) {
+      console.debug('Received sustainability data:', {
+        plantLifeImpact: state.sustainabilityData.sustainability_data.affect_on.plant_life,
+        marineLifeImpact: state.sustainabilityData.sustainability_data.affect_on.marine_life,
+        landLifeImpact: state.sustainabilityData.sustainability_data.affect_on.land_life,
+        alternativeProduct: state.sustainabilityData.sustainability_data.alternative.product_title,
+        dataStructure: JSON.stringify(state.sustainabilityData, null, 2)
+      });
+    }
+  }, [state?.sustainabilityData]);
+
   if (!state?.imageData) {
     return (
       <div className="scan-container">
