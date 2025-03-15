@@ -55,12 +55,6 @@ export default function ScanResult({ imageUrl, sustainabilityData }: ScanResultP
           <div className="scan-result__image-container">
             <img src={imageUrl} alt="Scanned item" className="scan-result__image" />
           </div>
-          <div className="scan-result__score-container">
-            <div className="sos-score-text">sos score</div>
-            <div className="sos-score-circle">
-              <div className="sos-score-value">{sosScore}%</div>
-            </div>
-          </div> 
         </div>
 
         <div className="scan-result__content">

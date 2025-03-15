@@ -328,6 +328,7 @@ Always return valid JSON using the exact template provided. Analyze both images 
 
   return (
     <div className="dashboard">
+      <div className='Camera-Greeting'>
       <div className="greeting-container">
         <h1 className="greeting">{getGreeting()}, {userName}</h1>
       </div>
@@ -350,6 +351,7 @@ Always return valid JSON using the exact template provided. Analyze both images 
             </div>
           )}
         </div>
+      </div>
       </div>
 
       <div className="bottom-area">
