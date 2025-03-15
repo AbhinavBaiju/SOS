@@ -107,6 +107,7 @@ export default function ScanResult({ imageUrl, sustainabilityData }: ScanResultP
         </div>
 
         <div className="scan-result__footer">
+            <h3 className='final-verdict'>FINAL VIRDICT GOES HERE</h3>
           <button className="sos-again-button" onClick={handleScanAgain}>
             sos again
           </button>

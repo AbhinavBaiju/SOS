@@ -6,7 +6,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  box-sizing: border-box;
 }
 
 .scan-title {
@@ -37,6 +37,7 @@
   border-radius: 15px;
   padding: 20px;
   margin-top: 20px;
+  box-sizing: border-box;
 }
 
 .analysis-results h2 {
