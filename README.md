@@ -1,54 +1,44 @@
-# React + TypeScript + Vite
+# 🌍 EcoScan - Environmental Scanner
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+🚀 **AI-powered environmental analysis tool** for rapid ecosystem assessment
 
-Currently, two official plugins are available:
+## ✨ Features
+- 🌿 **Plant Life Identification** - Instant recognition of flora species
+- 🐠 **Marine Life Detection** - Analyze aquatic ecosystems
+- 🦉 **Wildlife Tracking** - Identify animal species in scans
+- 📊 **AI Analysis** - Gemini-powered environmental insights
+- 📸 **Image Scanning** - Upload or capture ecosystem samples
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Getting Started
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+git clone https://github.com/AbhinavBaiju/SOS.git
+cd SOS
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+## 🔑 Environment Setup
+1. Create `.env` file:
+```bash
+cp .env.example .env
 ```
+2. Get [Gemini API Key](https://aistudio.google.com/) and add to `.env`:
+```env
+VITE_GEMINI_API_KEY=your_key_here
+```
+
+## ⚙️ Running the App
+```bash
+npm run dev
+```
+
+💡 The app will open automatically at `http://localhost:5173`
+
+---
+
+🛠 Built with:
+- ⚡ Vite + React
+- 🧠 Google Gemini AI
+- 📱 Responsive UI
+
+🔍 *This project was bootstrapped with [Vite](https://vitejs.dev/)*
