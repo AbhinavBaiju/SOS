@@ -1,0 +1,12 @@
+Due to the complexity of the implementation, direct code inclusion is impractical. The complete source code is available in our public GitHub repository.
+
+Repository: https://github.com/AbhinavBaiju/SOS
+
+To get started:
+1. Open the repository URL in a standard web browser
+2. Follow the setup instructions in the README.md file
+
+For immediate testing, a live demo is available on desktop browsers at:
+https://sossustainability.netlify.app/home
+
+(Mobile support is currently unavailable pending Apple's stricter certification requirements)
